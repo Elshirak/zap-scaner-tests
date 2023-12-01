@@ -4,6 +4,47 @@ jobs:
   log-the-inputs:
     runs-on: ubuntu-latest
     steps:
+      - name: Run and prepare DocSpace
+        env:
+          DOCKER_TAG: ${{ github.event.inputs.version }}
+          STATUS: "4testing-"
+          PROTO: "https"
+        run: |
+           # Get gh-action runner local ip
+           LOCAL_IP=${{ secrets.IP }}
+           echo "local-ip=${LOCAL_IP}" >> "$GITHUB_OUTPUT"
+
+           # Get Wizzard token and pwd hash for complete wizzard
+           WIZZARD_TOKEN=$(curl -k --request GET ${PROTO}://${LOCAL_IP}/api/2.0/settings | jq -r .response.wizardToken)
+           PWD_HASH=$(curl -k --request GET ${PROTO}://${LOCAL_IP}/api/2.0/settings | jq -r .response.passwordHash.salt)
+           EMAIL="root@root.com"
+           USER_PWD="88888888"
+           ## Complete wizard
+           curl -k -v -D output.txt --request PUT -H "confirm: ${WIZZARD_TOKEN}" \
+                                               -H "Accept: application/json" \
+                                               -H "Content-Type: application/json" \
+                                               --data '{"Email":"'"${EMAIL}"'","PasswordHash":"'"${PWD_HASH}"'"}' \
+                                               ${PROTO}://${LOCAL_IP}/api/2.0/settings/wizard/complete
+           # Get cookie and user-id
+           COOKIE=$(cat ./output.txt | egrep -i asc_auth_key=* | cut -d '=' -f 2-) && COOKIE=${COOKIE%%;*}
+           USER_ID=$(curl -k --request GET -H "Accept: application/json" \
+                                        -H "Content-Type: application/json" \
+                                        -H "Authorization: ${COOKIE}" \
+                                        ${PROTO}://${LOCAL_IP}/api/2.0/people/email?email=${EMAIL} | jq -r .response.id)
+           # Set new admin-user pwd
+           curl -k -v --request PUT -H "Accept: application/json" \
+                                 -H "Content-Type: application/json" \
+                                 -H "Authorization: ${COOKIE}" \
+                                 --data '{"Password":"'"${USER_PWD}"'"}' \
+                                 "${PROTO}://${LOCAL_IP}/api/2.0/people/${USER_ID}/password"
+           # Get new admin-user auth-token and authenticate the user
+           TOKEN=$(curl -k -v --request POST -H "Accept: application/json" \
+                                  -H "Content-Type: application/json" \
+                                  --data '{"userName":"'"${EMAIL}"'","password":"'"${USER_PWD}"'"}' \
+                                  "${PROTO}://${LOCAL_IP}/api/2.0/authentication" | jq -r .response.token)
+           # Set new auth-token for zap header
+           echo "ZAP_AUTH_HEADER_VALUE=${TOKEN}" >> "$GITHUB_ENV"
+    
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
