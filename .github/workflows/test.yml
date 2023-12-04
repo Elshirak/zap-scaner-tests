@@ -7,9 +7,9 @@ jobs:
       - name: Run and prepare DocSpace
         env:
           PROTO: "https"
+          LOCAL_IP: ${{ secrets.IP }}
         run: |
            # Get gh-action runner ip
-           LOCAL_IP=${{ secrets.IP }}
            echo "${{ LOCAL_IP }}"
            echo "local-ip=${{ LOCAL_IP }}" >> "$GITHUB_OUTPUT"
 
