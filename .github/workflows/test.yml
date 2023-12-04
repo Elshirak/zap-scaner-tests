@@ -9,7 +9,7 @@ jobs:
           PROTO: "https"
         run: |
            # Get gh-action runner ip
-           LOCAL_IP=${{ secrets.IP }} # docspace-test.onlyoffice.fun
+           LOCAL_IP=${{ secrets.IP }}
            echo "${{ LOCAL_IP }}"
            echo "local-ip=${{ LOCAL_IP }}" >> "$GITHUB_OUTPUT"
 
