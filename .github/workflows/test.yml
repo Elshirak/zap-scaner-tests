@@ -9,8 +9,9 @@ jobs:
           PROTO: "https"
         run: |
            # Get gh-action runner ip
-           LOCAL_IP=docspace-test.onlyoffice.fun
-           echo "local-ip=${LOCAL_IP}" >> "$GITHUB_OUTPUT"
+           LOCAL_IP="${{ secrets.IP }}" # docspace-test.onlyoffice.fun
+           echo "${{ LOCAL_IP }}"
+           echo "local-ip=${{ LOCAL_IP }}" >> "$GITHUB_OUTPUT"
 
 
            # Get Wizzard token and pwd hash for complete wizzard
@@ -53,11 +54,12 @@ jobs:
                                   
            # Set new auth-token for zap header
            echo "ZAP_AUTH_HEADER_VALUE=${TOKEN}" >> "$GITHUB_ENV"
+
     
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           token: ${{ secrets.YOY }}
-          target: 'https://docspace-test.onlyoffice.fun/'
+          target: "https://${{ LOCAL_IP }}/"
           allow_issue_writing: false
           cmd_options: '-j'
