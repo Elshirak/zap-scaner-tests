@@ -59,6 +59,6 @@ jobs:
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           token: ${{ secrets.YOY }}
-          target: "https://${ LOCAL_IP }/"
+          target: "https://docspace-test.onlyoffice.fun/"
           allow_issue_writing: false
           cmd_options: '-j'
