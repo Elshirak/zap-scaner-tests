@@ -7,7 +7,7 @@ jobs:
       - name: Run and prepare DocSpace
         env:
           PROTO: "https"
-          LOCAL_IP: "docspace-test.onlyoffice.fun"
+          LOCAL_IP: "${{ secrets.IP }}"
         run: |
            # Get gh-action runner ip
            echo "local-ip=${ LOCAL_IP }" >> "$GITHUB_OUTPUT"
@@ -59,6 +59,6 @@ jobs:
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           token: ${{ secrets.YOY }}
-          target: "https://${{ LOCAL_IP }}/"
+          target: "https://${ LOCAL_IP }/"
           allow_issue_writing: false
           cmd_options: '-j'
